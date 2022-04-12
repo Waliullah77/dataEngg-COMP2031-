@@ -1,0 +1,73 @@
+#Hydrate 
+
+twarc dehydrate tweets.jsonl > tweet_ids.txt
+
+#Rehydrate your dataset by entering the following command:
+
+twarc hydrate tweet_ids.txt > tweets_hydrated.jsonl
+#######################
+
+twarc search abcnews > abcnews.jsol
+
+twarc2 csv abcnews.json abc.csv>
+
+setwd()//or change manually from session menu
+getwd()
+
+install.packages("rjson")
+library("rjson")
+
+#try a file that was downloaded using twarc (example file attached)
+
+#you need to read separate json lines
+
+tweetsFile = readLines("abcnews.json", encoding = "UTF-8")
+
+#now you can read lines using a for loop. For demonstration purpose,
+#lets read only the first line to see what's in there!
+
+for (i in 1:length(tweetsFile)){
+  result = fromJSON(tweetsFile[4], method = 'C', unexpected.escape = "error")
+  print(result$id)
+
+# a dollar sign will help you access the fields associated with this variable
+
+result$id #press ctrl Enter to run it
+result$full_text #full text of the tweet
+result$metadata$iso_language_code 
+result$user #lots of info, using $ to access detailed info for each variable
+
+########################################
+#spliting words. Use function called strsplit
+
+strsplit(result$full_text, " ") # the second argument is the space character
+### remove http
+df1=data.frame(result$full_text)
+df1= gsub("http.*","",  df1) #https gone!
+df1 = gsub("@.*:","", df1) # remove colon and @
+# Try removing # and new line characters!!! 
+########################################
+
+#If you are using Twitter data from online sources, it may follow a different 
+#json structure. To demonstrate my point, I have uploaded a file that I downloaded
+#using GNIP back in 2017 during the SSM debate. 
+
+
+tweetsFile = readLines("20170914.json", encoding = "UTF-8")
+result = fromJSON(tweetsFile[1], method = 'C', unexpected.escape = "error")
+
+result$id
+# the id is not as simple as it was with twarc
+#Following pre-processing is required
+properid = strsplit(result$id, ",")
+properid[[1]][2]
+
+newproperid = strsplit(properid[[1]][2], ":")
+
+id = newproperid [[1]][2]
+
+result$body
+
+### lets split the words:
+
+mywords = strsplit(result$body, " ")

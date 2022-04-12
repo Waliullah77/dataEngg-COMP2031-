@@ -1,0 +1,87 @@
+#reference: https://kateto.net/netscix2016.html
+
+library(igraph)
+
+
+g1 <- graph( edges=c(1,2, 2,3, 3, 1), n=3, directed=F ) 
+plot(g1) # A simple plot of the network
+
+
+# Now with 10 vertices, and directed by default:
+
+g2 <- graph( edges=c(1,2, 2,3, 3, 1), n=10 )
+
+plot(g2)   
+
+g3 <- graph( c("John", "Jim", "Jim", "Jill", "Jill", "John")) # named vertices
+
+# When the edge list has vertex names, the number of nodes is not needed
+
+plot(g3)
+
+
+################## Reading a network
+#https://kateto.net/networks-r-igraph
+
+nodes <- read.csv("Dataset1-Media-Example-NODES.csv", header=T, as.is=T)
+
+links <- read.csv("Dataset1-Media-Example-EDGES.csv", header=T, as.is=T)
+
+head(nodes)
+
+head(links) #edgelist!
+
+nrow(nodes); length(unique(nodes$id))
+
+nrow(links); nrow(unique(links[,c("from", "to")])) # total links vs unique links
+
+
+links <- aggregate(links[,3], links[,-3], sum)
+
+links <- links[order(links$from, links$to),]
+
+colnames(links)[4] <- "weight"
+
+rownames(links) <- NULL
+
+####
+
+nodes2 <- read.csv("Dataset2-Media-User-Example-NODES.csv", header=T, as.is=T)
+
+links2 <- read.csv("Dataset2-Media-User-Example-EDGES.csv", header=T, row.names=1)
+
+#examine data
+
+head(nodes2)
+
+head(links2) #adj matrix
+#We can see that links2 is an adjacency matrix for a two-mode network:
+
+links2 <- as.matrix(links2)
+
+dim(links2)
+
+dim(nodes2)
+###########
+#This function creates an igraph graph from one or two data frames containing 
+#the (symbolic) edge list and edge/vertex attributes.
+net <- graph_from_data_frame(d=links, vertices=nodes, directed=T) 
+
+E(net)       # The edges of the "net" object
+
+V(net)       # The vertices of the "net" object
+
+E(net)$type  # Edge attribute "type"
+
+V(net)$media # Vertex attribute "media"
+
+plot(net, edge.arrow.size=.4,vertex.label=NA)
+
+net <- simplify(net, remove.multiple = F, remove.loops = T) 
+
+as_edgelist(net, names=T)
+
+as_adjacency_matrix(net, attr="weight")
+
+#calculating centrality
+https://bookdown.org/markhoff/social_network_analysis/centrality.html

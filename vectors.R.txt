@@ -1,0 +1,266 @@
+# Tutorial 3 (Wk: 4)
+# Practice these concepts in the lab
+
+#vectors
+
+
+# Use the `c()` function to create a vector of character values
+people <- c("Sarah", "Amit", "Zhang")
+print(people)
+# [1] "Sarah" "Amit" "Zhang"
+# Use the `c()` function to create a vector of numeric values
+numbers <- c(1, 2, 3, 4, 5)
+print(numbers)
+# [1] 1 2 3 4 5
+
+#### Find Length
+
+# Create and measure the length of a vector of character elements
+people <- c("Sarah", "Amit", "Zhang")
+people_length <- length(people)
+print(people_length)
+# [1] 3
+
+# Create and measure the length of a vector of numeric elements
+numbers <- c(1, 2, 3, 4, 5)
+print(length(numbers))
+# [1] 5
+
+### create a sequence
+
+# Use the `seq()` function to create a vector of numbers 1 through 70
+# (inclusive)
+one_to_seventy <- seq(1, 70)
+print(one_to_seventy)
+# [1] 1 2 3 4 5 .....
+
+# Make vector of numbers 1 through 10, counting by 2
+odds <- seq(1, 10, 2)
+print(odds)
+# [1] 1 3 5 7 9
+
+# Use the colon operator (:) as a shortcut for the `seq()` function
+one_to_seventy <- 1:70
+
+
+############## Operations on Vectors
+
+# Create two vectors to combine
+v1 <- c(3, 1, 4, 1, 5)
+v2 <- c(1, 6, 1, 8, 0)
+
+# Create arithmetic combinations of the vectors
+v1 + v2 # returns 4 7 5 9 5
+v1 - v2 # returns 2 -5 3 -7 5
+v1 * v2 # returns 3 6 4 8 0
+v1 / v2 # returns 3 0.167 4 0.125 Inf
+
+# Add a vector to itself (why not?)
+v3 <- v2 + v2 # returns 2 12 2 16 0
+
+# Perform more advanced arithmetic!
+v4 <- (v1 + v2) / (v1 + v1) # returns 0.67 3.5 0.625 4.5 0.5
+
+#Recycling refers to what R does in cases when there are an unequal number of 
+#elements in two operand vectors. If R is tasked with performing a vectorized 
+#operation with two vectors of unequal length, it will reuse (recycle) elements 
+#from the shorter vector. For example:
+
+# Create vectors to combine
+v1 <- c(1, 3, 5, 1, 5)
+v2 <- c(1, 2)
+
+# Add vectors
+v3 <- v1 + v2 # returns 2 5 6 3 6
+
+
+#################
+
+# Add a single value to a vector of values
+v1 <- 1:5 # create vector of numbers 1 to 5
+result <- v1 + 4 # add scalar to vector
+print(result)
+# [1] 5 6 7 8 9
+
+######
+# Confirm that basic types are stored in vectors
+is.vector(18) # TRUE
+is.vector("hello") # TRUE
+is.vector(TRUE) # TRUE
+
+
+####
+# Create a vector of length 1 in a variable `x`
+x <- 7 # equivalent to `x <- c(7)`
+
+# Print out `x`: R displays the vector index (1) in the console
+print(x)
+# [1] 7
+
+##########
+
+# Create a character variable `introduction`, then count the number
+# of characters
+introduction <- "Hello"
+nchar(introduction) # returns 5
+
+# Create a vector of `introductions`, then count the characters in
+# each element
+introductions <- c("Hi", "Hello", "Howdy")
+nchar(introductions) # returns 2  5  5
+
+#############  Vector Indices
+
+vowels <- c("a", "e", "i", "o", "u")
+
+#You can retrieve a value from a vector using bracket notation.
+########
+
+# Create the people vector
+people <- c("Sarah", "Amit", "Zhang")
+
+# Access the element at index 1
+first_person <- people[1]
+print(first_person)
+# [1] "Sarah"
+
+# Access the element at index 2
+second_person <- people[2]
+print(second_person)
+# [1] "Amit"
+
+# You can also use variables inside the brackets
+last_index <- length(people) # last index is the length of the vector!
+last_person <- people[last_index] # returns "Zhang
+
+##Don’t get confused by the [1] in the printed output. It doesn’t refer to
+#which index you got from people, but rather to the index in the extracted 
+#result (e.g., stored in second_person) that is being printed!
+##############
+
+# Create a vector of vowels
+vowels <- c("a", "e", "i", "o", "u")
+
+# Attempt to access the 10th element
+vowels[10] # returns NA
+
+###################
+
+vowels <- c("a", "e", "i", "o", "u")
+
+# Return all elements EXCEPT that at index 2
+all_but_e <- vowels[-2]
+print(all_but_e)
+# [1] "a" "i" "o" "u"
+
+########################## Multiple Indices
+
+# Create a `colors` vector
+colors <- c("red", "green", "blue", "yellow", "purple")
+
+# Vector of indices (to extract from the `colors` vector)
+indices <- c(1, 3, 4)
+
+# Retrieve the colors at those indices
+extracted <- colors[indices]
+print(extracted)
+# [1] "red" "blue" "yellow"
+
+# Specify the index vector anonymously
+others <- colors[c(2, 5)]
+print(others)
+# [1] "green" "purple"
+
+############
+# Create a `colors` vector
+colors <- c("red", "green", "blue", "yellow", "purple")
+
+# Retrieve values in positions 2 through 5
+print(colors[2:5])
+# [1] "green" "blue" "yellow" "purple"
+
+
+#Vector Filtering
+
+# Create a vector of shoe sizes
+shoe_sizes <- c(5.5, 11, 7, 8, 4)
+
+# Vector of booleans (to filter the `shoe_sizes` vector)
+filter <- c(TRUE, FALSE, FALSE, FALSE, TRUE)
+
+# Extract every element in an index that is TRUE
+print(shoe_sizes[filter])
+# [1]  5.5 4
+
+# Create a vector of shoe sizes
+shoe_sizes <- c(5.5, 11, 7, 8, 4)
+
+# Create a boolean vector that indicates if a shoe size is less than 6.5
+shoe_is_small <- shoe_sizes < 6.5 # returns T F F F T
+
+# Use the `shoe_is_small` vector to select small shoes
+small_shoes <- shoe_sizes[shoe_is_small] # returns 5.5 4
+
+# Create a vector of shoe sizes
+shoe_sizes <- c(5.5, 11, 7, 8, 4)
+
+# Select shoe sizes that are smaller than 6.5
+shoe_sizes[shoe_sizes < 6.5] # returns 5.5 4
+
+
+############### Modifying vectors
+# Create a vector `prices`
+prices <- c(25, 28, 30)
+
+# Change the first price to 20
+prices[1] <- 20
+print(prices)
+# [1] 20 28 30
+
+# Create a vector `prices`
+prices <- c(25, 28, 30)
+
+# Add a fourth price
+prices[4] <- 32
+
+# Add a new price (35) to the end of the vector
+new_index <- length(prices) + 1 # the "end" is 1 after the last element
+prices[new_index] <- 35
+
+# Create a vector of school supplies
+school_supplies <- c("Backpack", "Laptop", "Pen")
+
+# Replace "Laptop" with "Tablet", and "Pen" with "Pencil"
+school_supplies[ c(2, 3)] <- c("Tablet", "Pencil")
+
+#If you try to modify an element at an index that is greater than the 
+#length of the vector, R will fill the vector with NA values:
+# Create a vector `prices`
+prices <- c(25, 28, 30)
+
+# Set the sixth element in the vector to have the value 60
+prices[6] <- 60
+print(prices)
+# [1] 25 28 30 NA NA 60
+
+# Use the combine (`c()`) function to create a vector
+people <- c("Sarah", "Amit", "Zhang")
+
+# Use the `c()` function to combine the `people` vector and the name "Josh"
+more_people <- c(people, "Josh")
+print(more_people)
+# [1] "Sarah" "Amit" "Zhang" "Josh"
+
+#Finally, vector modification can be combined with vector filtering to allow you
+#to replace a specific subset of values. For example, you could replace all 
+#values in a vector that were greater than 10 with the 
+#number 10 (to “cap” the values). 
+#Because the assignment operator is vectorized, you can leverage recycling to 
+#assign a single value to each element that has been filtered from the vector:
+
+# Create a vector of values
+v1 <- c(1, 5, 55, 1, 3, 11, 4, 27)
+
+# Replace all values greater than 10 with 10
+v1[v1 > 10] <- 10 # returns 1 5 10 1 3 10 4 10
+
