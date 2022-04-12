@@ -1,0 +1,15 @@
+walimongodb
+PW: Wali@1977
+
+
+connection string (SRV or Standard): 
+
+mongodb+srv://walimongodb:<password>@cluster0.szucd.mongodb.net/test
+
+Project: tweepy_stream
+
+U/Name: tweepy
+PW: B9UHXI7tUYI8ZFfH
+
+U/Name: GroupProject
+PW: uxiGIJ6VCuPoz6Yu

@@ -1,0 +1,68 @@
+installing Mongodb using cmd
+============================
+
+open browser> choose www.mongodb.com
+click and download the appropriate .msi for your OS
+
+install using complete options with default settings
+
+once the installation is complete find the mongodb bin folder inside your C drive.
+
+Copy the path
+
+>>>>>>>>>>>>>>>open cmd
+
+type cd and paste the copied path and ENTER
+type 'mongod' and ENTER
+
+open 'C' drive, create a folder named 'data'
+open data folder and create a folder named 'db'
+
+Open another cmd type mongo and ENTER
+
+it will show the path to interact with mongodb.
+-----------------------------------------------
+
+setting tthe environment variables
+-----------------------------------
+
+right click on windows logo and click system.
+choose advance settings>>Environment Variables
+double click 'path' choose 'new' from the "Edit environment variable" window
+paste the bin directory path and OK.
+restart PC
+mongod will run automatically*
+.............................................
+open cmd and type 'mongo' Enter (connect to mongo server)
+ 
+show dbs -shows all database
+use [name of your database] - to create the database
+db.[name of your collections].insert(["name": "mongodb [enter name of your collection]")
+///db.groupProject.insert({"name": "mongodb groupProject"})
+
+show dbs
+show collections
+db.[name of the collections].find().pretty
+
+
+
+
+
+
+
+
+
+
+importing .json/.csv file to Mongodb
+-------------------------------------
+
+Open mongodb compass
+type/paste your connection string for local hosts: (default port)
+
+mongodb://localhost[:27017] and ENTER/click CONNECT
+
+Create a new DB or click on an existing db.
+
+click import data
+choose file type
+click insert
