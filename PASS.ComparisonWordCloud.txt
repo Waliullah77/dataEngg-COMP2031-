@@ -1,0 +1,53 @@
+setwd("D:/Flinders Uni/Semester-4/Data Engineering/Project")
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+labor_tweets = read.csv(file = "D:/Flinders Uni/Semester-4/Data Engineering/Project/laborA.csv", header = T)
+liberal_tweets = read.csv(file = "D:/Flinders Uni/Semester-4/Data Engineering/Project/liberalA.csv", header = T)
+
+```
+
+```{r}
+allLab = paste(labor_tweets$text, collapse = " ")
+allLib = paste(liberal_tweets$text, collapse = " ")
+
+```
+
+```{r}
+allLabLib = c(allLab, allLib)
+
+```
+```{r}
+library(tm)
+allLabLib = VectorSource(allLabLib)
+allCorpus = VCorpus(allLabLib)
+
+CleanCorpus <- function(x){
+     x <- tm_map(x, content_transformer(tolower))
+     x <- tm_map(x, removeNumbers) #remove numbers before removing words. Otherwise "trump2016" leaves "trump"
+     x <- tm_map(x, removeWords, tidytext::stop_words$word)
+     x <- tm_map(x, removePunctuation)
+     x <- tm_map(x, stripWhitespace)
+     return(x)}
+
+allCorpus = CleanCorpus(allCorpus)
+
+removeURL <- function(x) gsub('http[^[:alnum:][:blank:]?&/\\-]', '', x)
+allCorpus<- tm_map(allCorpus, content_transformer(removeURL))
+
+nonASCII <- function(y) gsub("[^\u0001-\u007F]+|<U\\+\\w+>","", y)
+allCorpus<- tm_map(allCorpus, content_transformer(nonASCII))
+
+```
+
+```{r}
+library(comparison)
+library(wordcloud)
+
+TermsAll <- TermDocumentMatrix(allCorpus)
+colnames(TermsAll) <- c("Labor", "Liberal")
+MatrixAll <- as.matrix(TermsAll)
+
+comparison.cloud(MatrixAll, colors = c("#FF1493", "blue"), scale=c(2.3,.3), max.words = 100)
+
+```

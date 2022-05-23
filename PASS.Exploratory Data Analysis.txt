@@ -1,0 +1,249 @@
+#Download twitter
+
+twarc2  search --limit 5000 "AustralianLabor" laborA.jsonl
+twarc2  search --limit 5000 "LiberalAus" liberalA.jsonl
+twarc2  search --limit 5000 "Australia Election 2022" Election22A.jsonl
+
+#convert .jsonl to .csv format
+
+twarc2 csv laborA.jsonl  laborA.csv
+twarc2 csv liberalA.jsonl  liberalA.csv
+twarc2 csv Election22A.jsonl  Election22A.csv
+***********************************************
+
+# Read file
+labor_tweets <- read.csv(file.choose())
+str(labor_tweets)
+
+# Build corpus
+library(tm)
+df <- iconv(labor_tweets$text, to = "utf-8")
+df <- Corpus(VectorSource(df))
+inspect(df[1:5])
+
+# Clean text
+
+df = tm_map(df, tolower)
+df = tm_map(df, removePunctuation)
+df = tm_map(df, removeNumbers)
+cleanset = tm_map(df, removeWords, stopwords('english'))
+inspect(df[1:5])
+
+removeURL <- function(x) gsub('http[^[:alnum:][:blank:]?&/\\-]', '', x)
+cleanset <- tm_map(cleanset, content_transformer(removeURL))
+
+nonASCII <- function(y) gsub("[^\u0001-\u007F]+|<U\\+\\w+>","", y)
+cleanset <- tm_map(cleanset, content_transformer(nonASCII))
+
+************************************************************
+cleanset <- tm_map(cleanset, removeWords, c('albo', 'albanese',
+			'simon', 'andrew', 'australianlabor', 'amp',
+			'albomp', 'labor', 'andrewprobyn', 'isnt'))
+cleanset <- tm_map(cleanset, gsub, 
+                   pattern = 'stocks', 
+                   replacement = 'stock')
+
+cleanset <- tm_map(cleanset, stripWhitespace)
+inspect(cleanset[1:5])
+
+# Term document matrix
+tdm <- TermDocumentMatrix(cleanset)
+tdm <- as.matrix(tdm)
+tdm[1:10, 1:20]
+
+# Bar plot
+w <- rowSums(tdm)
+w <- subset(w, w>=100)
+barplot(w,
+        las = 2,
+        col = rainbow(50),
+        main="Word Frequency Chart",
+        #xlab="Frequent words", ylab="Frequency >= 100")
+
+# Word cloud
+install.pakages ("wordcloud")
+library(wordcloud)
+w <- sort(rowSums(tdm), decreasing = TRUE)
+set.seed(1)
+wordcloud(words = names(w),
+           freq = w,
+           max.words = 150,
+           random.order = F,
+           random.color = T,
+           min.freq = 50,
+           colors = brewer.pal(8, 'Dark2'),
+           scale = c(1, .7),
+           rot.per = 0.7)
+
+install.packages("wordcloud2")
+library(wordcloud2)
+w <- data.frame(names(w), w)
+colnames(w) <- c('word', 'freq')
+wordcloud2(w,
+           size = 0.7,
+           shape = 'triangle',
+           rotateRatio = 0.5,
+           minSize = 2,
+	     color = "random-light")
+
+#Clickable wordcloud2
+#install.packages("shiny")
+library(shiny)
+library(wordcloud2)
+shinyApp(ui=shinyUI(fluidPage(
+#using default clicked word input id
+        wordcloud2Output("my_wc", width = "50%", height = "400px"),
+#using custom clicked word input id
+        wordcloud2Output("my_wc2", width = "50%", height = "400px"),
+        
+        verbatimTextOutput("print"),
+        verbatimTextOutput("print2"))),
+    	  server=shinyServer(function(input,output,session){
+        
+        figPath = system.file("examples/a.png",package = "wordcloud2")
+        
+        output$my_wc  = renderWordcloud2(wordcloud2(data = w, figPath = figPath, size = 0.4,color = "blue"))
+        output$my_wc2 = renderWordcloud2(wordcloud2(w))
+        
+#using default clicked word input id
+        output$print  = renderPrint(input$my_wc_clicked_word)
+#using custom clicked word input id
+        output$print2 = renderPrint(input$my_wc2_clicked_word)}))
+
+# Star shape
+library(wordcloud2)
+wordcloud2(w, size = 1,shape = 'star')
+
+letterCloud(w,
+            word = "apple",
+            size=2)
+letterCloud(w, 
+		word = "WORDCLOUD2",
+		wordSize = 1)
+
+# Sentiment analysis
+install.packages("syuzhet")
+install.packages("lubridate")
+install.packages("ggplot2")
+install.packages("scales")
+install.packages("reshape2")
+install.packages("dplyr")
+
+#letterCloud(demoFreq, word = "WORDCLOUD2", wordSize = 1)
+
+# Read file
+apple <- read.csv(file.choose(), header = T)
+tweets <- iconv(apple$text, to = 'utf-8')
+
+# Obtain sentiment scores
+s <- get_nrc_sentiment(tweets)
+head(s)
+tweets[4]
+get_nrc_sentiment('delay')
+
+# Bar plot
+barplot(colSums(s),
+        las = 2,
+        col = rainbow(10),
+        ylab = 'Count',
+        main = 'Sentiment Scores for Apple Tweets')
+
+********************************************************
+# Network of terms
+library(igraph)
+tdm <- tdm[rowSums(tdm)>100,]
+tdm[tdm>1] <- 1
+termM <- tdm %*% t(tdm)
+termM[1:10,1:10]
+g <- graph.adjacency(termM, weighted = T, mode = 'undirected')
+g
+g <- simplify(g)
+V(g)$label <- V(g)$name
+V(g)$degree <- degree(g)
+
+# Histogram of node degree
+hist(V(g)$degree,
+     breaks = 100,
+     col = 'green',
+     main = 'Histogram of Node Degree',
+     ylab = 'Frequency',
+     xlab = 'Degree of Vertices')
+
+# Network diagram
+set.seed(222)
+plot(g)
+plot(g,
+     vertex.color='green',
+     vertex.size = 4,
+     vertex.label.dist = 1.5,
+     vertex.label = NA)
+
+# Community detection
+comm <- cluster_edge_betweenness(g)
+plot(comm, g)
+
+prop <- cluster_label_prop(g)
+plot(prop, g)
+
+greed <- cluster_fast_greedy(as.undirected(g))
+plot(greed, as.undirected(g))
+
+# Hub and authorities
+hs <- hub_score(g, weights = NA)$vector
+as <- authority_score(g, weights=NA)$vector
+par(mfrow=c(1,2))
+plot(g, vertex.size=hs*50, main='Hubs',
+     vertex.label=NA,
+     vertex.color=rainbow(50))
+plot(g, vertex.size=as*30, main='Authorities',
+     vertex.label=NA,
+     vertex.color=rainbow(50))
+par(mfrow=c(1,1))
+
+# Highlighting degrees
+V(g)$label.cex <- 2.2*V(g)$degree / max(V(g)$degree) + 0.3
+V(g)$label.color <- rgb(0, 0, .2, .8)
+V(g)$frame.color <- NA
+egam <- (log(E(g)$weight)+.4) / max(log(E(g)$weight) + .4)
+E(g)$color <- rgb(.5, .5, 0, egam)
+E(g)$width <- egam
+plot(g,
+     vertex.color='green',
+     vertex.size = V(g)$degree*.5)
+
+# Network of tweets
+tweetM <- t(tdm) %*% tdm
+g <- graph.adjacency(tweetM, weighted = T, mode = 'undirected')
+V(g)$degree <- degree(g)
+g <- simplify(g)
+hist(V(g)$degree,
+     breaks = 100,
+     col = 'green',
+     main = 'Histogram of Degree',
+     ylab = 'Freuqency',
+     xlab = 'Degree')
+
+# Set labels of vertices to tweet IDs
+V(g)$label <- V(g)$name
+V(g)$label.cex <- 1
+V(g)$label.color <- rgb(.4, 0, 0, .7)
+V(g)$size <- 2
+V(g)$frame.color <- NA
+plot(g, vertex.label=NA, vertex.size=6)
+
+# Delete vertices
+egam <- (log(E(g)$weight)+.2)/ max(log(E(g)$weight)+ .2)
+E(g)$color <- rgb(.5, .5, 0, egam)
+E(g)$width <- egam
+g2 <- delete.vertices(g, V(g)[degree(g)<40])
+plot(g2,
+     vertex.label.cex = .9,
+     vertex.label.color = 'black')
+
+# Delete edges
+E(g)$color <- rgb(.5, .5, 0, egam)
+E(g)$width <- egam
+g3 <- delete.edges(g, E(g)$weight <- 1)
+g3 <- delete.vertices(g3, V(g3)[degree(g3)<20])
+plot(g3)
+apple$text[c(747, 430)]

@@ -1,0 +1,242 @@
+# Read file
+labor_tweets <- read.csv(file.choose())
+#str(labor_tweets)
+```
+We have saved our data on a local machine to demonstrate how our data processing works. Using file.choose() we will locate the *.csv file and read the tweets.The next step is to create Corpus. To do so, we have to use the ‘tm’ library. VectorSource(x) : Takes a grouping of texts and makes each element of the resulting vector a document within your R Workspace.
+```{r Corpus, echo=TRUE}
+# Build corpus
+#install.packages("tm")
+
+library(tm)
+df <- iconv(labor_tweets$text, to = "utf-8")
+df <- Corpus(VectorSource(df))
+inspect(df[1:5])
+```
+# ***Next step to clean the data***
+
+```{r Clean tweets, echo=TRUE}
+# Clean text
+df = tm_map(df, tolower)
+df = tm_map(df, removePunctuation)
+df = tm_map(df, removeNumbers)
+cleanset = tm_map(df, removeWords, stopwords('english'))
+inspect(df[1:5])
+
+#remove URL & nonASCII character
+removeURL <- function(x) gsub('http[^[:alnum:][:blank:]?&/\\-]', '', x)
+cleanset <- tm_map(cleanset, content_transformer(removeURL))
+nonASCII <- function(y) gsub("[^\u0001-\u007F]+|<U\\+\\w+>","", y)
+cleanset <- tm_map(cleanset, content_transformer(nonASCII))
+
+#remove undesired words
+
+cleanset <- tm_map(cleanset, removeWords, c('albo', 'albanese',
+			'simon', 'andrew', 'australianlabor', 'amp',
+			'albomp', 'labor', 'andrewprobyn', 'isnt'))
+
+#remove white spaces
+cleanset <- tm_map(cleanset, stripWhitespace)
+inspect(cleanset[1:5])
+```
+### *Data is ready for analysis*
+
+```{r Term document matrix, echo=TRUE}
+# Term document matrix
+tdm <- TermDocumentMatrix(cleanset)
+
+tdm <- as.matrix(tdm)
+#tdm[1:10, 1:20]
+```
+To visualize the frequent word, we will create a word frequency chart based on the tweets:
+
+```{r Bar Plot, echo=TRUE}
+#Bar plot
+w <- rowSums(tdm)
+w <- subset(w, w>=150)
+barplot(w,
+        las = 2,
+        col = rainbow(50),
+        main="Word Frequency Chart",
+        ylab="Frequency >= 150")
+```
+
+#Word cloud is used to visualize the concentration of the topic of discussion on social media.We will use wordcloud library to render the word cloud.
+
+```{r Word cloud, echo=FALSE}
+# Word cloud
+#install.pakages ("wordcloud")
+library(wordcloud)
+w <- sort(rowSums(tdm), decreasing = TRUE)
+set.seed(110)
+wordcloud(words = names(w),
+           freq = w,
+           max.words = 150,
+           random.order = F,
+           random.color = T,
+           min.freq = 75,
+           colors = brewer.pal(8, 'Dark2'),
+           scale = c(1, .5),
+           rot.per = 0.75)
+
+```
+
+#Using “wordcloud2” library in R we can create a clickable word cloud actually to see which words were used how many times.
+
+```{r Wordcloud2, echo=TRUE}
+library(wordcloud2)
+
+w <- data.frame(names(w), w)
+colnames(w) <- c('word', 'freq')
+wordcloud2(w,
+           size = 0.7,
+           shape = 'triangle',
+           rotateRatio = 0.5,
+           minSize = 1,
+	     color = "random-light")
+```
+# Sentiment Analysis
+#install.packages("syuzhet")
+#install.packages("lubridate")
+#install.packages("ggplot2")
+#install.packages("scales")
+#install.packages("reshape2")
+#install.packages("dplyr")
+
+```{r Use the libraries, echo=FALSE}
+library(syuzhet)
+library(lubridate)
+library(ggplot2)
+library(scales)
+library(reshape2)
+library(dplyr)
+```
+#To perform the sentiment analysis we have to convert the tweets as character vector using iconv() in R.
+
+```{r Sentiment, echo=TRUE}
+# Read file
+labor_sentiment <- read.csv(file.choose(), header = T)
+tweets <- iconv(labor_sentiment$text, to = 'utf-8')
+
+
+# Obtain sentiment scores
+s <- get_nrc_sentiment(tweets)
+head(s)
+#tweets[4]
+get_nrc_sentiment('delay')
+
+# Bar plot
+barplot(colSums(s),
+        las = 2,
+        col = rainbow(10),
+        ylab = 'Count',
+        main = 'Sentiment Scores for Australian Labor Tweets')
+
+```
+
+```{r echo=TRUE}
+# Network of terms
+library(igraph)
+tdm <- tdm[rowSums(tdm)>200,]
+tdm[tdm>1] <- 1
+termM <- tdm %*% t(tdm)
+termM[1:10,1:10]
+g <- graph.adjacency(termM, weighted = T, mode = 'undirected')
+g
+g <- simplify(g)
+V(g)$label <- V(g)$name
+V(g)$degree <- degree(g)
+```
+
+# Trim & Plot
+
+```{r}
+library(igraph)
+set.seed(222)
+layout1 <- layout.fruchterman.reingold(g)
+
+#Code below clean the network cleaner & nicer
+
+V(g)$label.cex <- 2.2 * V(g)$degree / max(V(g)$degree)+ .2
+V(g)$label.color <- rgb(0, 0, .2, .8)
+V(g)$frame.color <- NA
+egam <- (log(E(g)$weight)+.4) / max(log(E(g)$weight)+.4)
+E(g)$color <- rgb(.5, .5, 0, egam)
+E(g)$width <- egam
+plot(g, layout= layout1)
+```
+
+
+#  ***Histogram of node degree***
+
+```{r}
+
+hist(V(g)$degree,
+     breaks = 100,
+     col = 'green',
+     main = 'Histogram of Node Degree',
+     ylab = 'Frequency',
+     xlab = 'Degree of Vertices')
+```
+
+#  ***Network diagram***
+
+```{r}
+
+set.seed(222)
+#plot(g)
+plot(g,
+     vertex.color='green',
+     vertex.size = 10,
+     vertex.label.dist = 6.5,
+     vertex.label = NA)
+```
+
+
+#  ***Community detection***
+
+```{r}
+
+comm <- cluster_edge_betweenness(g)
+plot(comm, g)
+
+prop <- cluster_label_prop(g)
+#plot(prop, g)
+
+greed <- cluster_fast_greedy(as.undirected(g))
+plot(greed, as.undirected(g))
+
+```
+
+#  ***Hub and authorities***
+
+```{r Hub & Auth, echo=TRUE}
+
+hs <- hub_score(g, weights = NA)$vector
+as <- authority_score(g, weights=NA)$vector
+par(mfrow=c(1,2))
+plot(g, vertex.size=hs*50, main='Hubs',
+     vertex.label=NA,
+     vertex.color=rainbow(50))
+plot(g, vertex.size=as*30, main='Authorities',
+     vertex.label=NA,
+     vertex.color=rainbow(50))
+par(mfrow=c(1,2))
+
+```
+
+
+#  ***Network of Tweets***
+
+```{r Network of Tweets, echo=TRUE}
+tweetM <- t(tdm) %*% tdm
+g <- graph.adjacency(tweetM, weighted = T, mode = 'undirected')
+V(g)$degree <- degree(g)
+g <- simplify(g)
+hist(V(g)$degree,
+     breaks = 100,
+     col = 'green',
+     main = 'Histogram of Degree',
+     ylab = 'Freuqency',
+     xlab = 'Degree')
+
+```
